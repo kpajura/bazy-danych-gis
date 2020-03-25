@@ -584,17 +584,39 @@ drop sequence liczba_seq;
 --zadanie 14
 
 -- a) Napisz zapytanie wyœwietlaj¹ce listê u¿ytkowników bazy
-select * from user;
+SELECT u.usename AS "Role name",
+  CASE WHEN u.usesuper AND u.usecreatedb THEN CAST('superuser, create
+database' AS pg_catalog.text)
+       WHEN u.usesuper THEN CAST('superuser' AS pg_catalog.text)
+       WHEN u.usecreatedb THEN CAST('create database' AS
+pg_catalog.text)
+       ELSE CAST('' AS pg_catalog.text)
+  END AS "Attributes"
+FROM pg_catalog.pg_user u
+ORDER BY 1;
 
 -- b) Utwórz nowego u¿ytkownika o nazwie SuperuserNrIndeksu , który bêdzie posiada³ uprawnienia superu¿ytkownika (superuser) 
 -- oraz u¿ytkownika, guest NumerIndeksu , który bêdzie mia³ tylko uprawnienia przegl¹dania bazy. 
 -- Ponownie wyœwietl listê u¿ytkowników. 
 
 create user Superuser299639;
-create role superuser;
-GRANT ALL TO superuser;
+ALTER ROLE superuser299639 SUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;
+GRANT  USAGE ON SCHEMA sklep TO Superuser299639;
+
+create user guest299639;
+alter role guest299639 NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN;
+grant  usage on schema sklep TO guest299639;
+grant select on all tables in schema "sklep" TO guest299639;
 
 
+-- c)Zmieñ nazwê u¿ytkownika SuperuserNrIndeksu  na student , odbieraj¹c mu uprawnienia, ograniczaj¹c je wy³¹cznie do
+-- przegl¹dania. Usuñ u¿ytkownika guest NumerIndeksu
+ 
+alter user superuser299639 rename to student;
+alter role student NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT LOGIN;
+GRANT select on all tables in schema "sklep" to student;
+revoke ALL on all tables in schema "sklep" from guest299639;
+drop user guest299639;
 
 -- zadanie 15
 -- a) Zwiêksz cenê ka¿dego produktu o 10 z³ u¿ywaj¹c transakcji. 
@@ -627,8 +649,5 @@ rollback;
 -- produktów w zamówieniach. Np. ASUS – 34% wszystkich zamówieñ 
 
 --????
-
-
-
 
 
